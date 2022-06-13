@@ -1,5 +1,5 @@
-const database = require('./database');
-const apiRoutes = require('./apiRoutes');
+const database = require('./database'); //apiRoutes.js and userRoutes.js are responsible for any HTTP requests to /users/something or /api/something.
+const apiRoutes = require('./apiRoutes'); //apiRoutes.js and userRoutes.js are responsible for any HTTP requests to /users/something or /api/something.
 const userRoutes = require('./userRoutes');
 
 const path = require('path');
@@ -15,7 +15,7 @@ app.use(cookieSession({
   keys: ['key1']
 }));
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false })); //helps parse data posted by user through form
 app.use(bodyParser.json());
 
 // /api/endpoints

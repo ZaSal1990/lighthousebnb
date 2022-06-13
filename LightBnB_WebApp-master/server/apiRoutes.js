@@ -16,11 +16,11 @@ module.exports = function(router, database) {
       return;
     }
     database.getAllReservations(userId)
-    .then(reservations => res.send({reservations}))
-    .catch(e => {
-      console.error(e);
-      res.send(e)
-    });
+      .then(reservations => res.send({reservations}))
+      .catch(e => {
+        console.error(e);
+        res.send(e);
+      });
   });
 
   router.post('/properties', (req, res) => {

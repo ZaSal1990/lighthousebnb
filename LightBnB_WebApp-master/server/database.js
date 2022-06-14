@@ -71,7 +71,7 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return pool.query('SELECT reservations.* FROM reservations JOIN properties ON reservations.property_id = properties.id JOIN property_reviews ON properties.id = property_reviews.property_id WHERE property_reviews.guest_id = $1 GROUP BY properties.id, reservations.id ORDER BY reservations.start_date LIMIT $2;',[guest_id, limit]).then( result => result.rows);
+  return pool.query('SELECT reservations.*, properties.*, avg(rating) as average_rating FROM reservations JOIN properties ON reservations.property_id = properties.id JOIN property_reviews ON properties.id = property_reviews.property_id WHERE reservations.guest_id = $1 GROUP BY properties.id, reservations.id ORDER BY reservations.start_date LIMIT $2;',[guest_id, limit]).then(result => result.rows);
 }
 exports.getAllReservations = getAllReservations;
 
@@ -83,20 +83,50 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-const getAllProperties = function(options, limit = 10) {
-  return pool
-    .query(
-      'SELECT * FROM properties LIMIT $1',[limit])
-    .then((result) => {
-      return result.rows;
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
+ const getAllProperties = function(options, limit = 10) {
+
+  const queryParams = [];
+
+  let queryString = `
+  SELECT properties.*, avg(property_reviews.rating) as average_rating
+  FROM properties
+  LEFT JOIN property_reviews ON properties.id = property_id
+  `;
+
+  let filters = '';
+
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    filters += ` WHERE city LIKE $${queryParams.length} `;
+  }
+  if (options.owner_id) {
+    queryParams.push(`${options.owner_id}`);
+    filters += ` ${filters === '' ? 'WHERE' : 'AND'} owner_id = $${queryParams.length}`;
+  }
+  if (options.minimum_price_per_night && options.maximum_price_per_night) {
+    queryParams.push(`${options.minimum_price_per_night}`); //breaking query to utilize .length with .push properly, as mentor to get better solution, pushingh and accessing later two arguments is not working properly
+    filters += ` ${filters === '' ? 'WHERE' : 'AND'} cost_per_night BETWEEN $${queryParams.length}`;
+    queryParams.push(`${options.maximum_price_per_night}`);
+    filters += ` AND $${queryParams.length}`;
+  }
+  if (options.minimun_rating) {
+    queryParams.push(`${options.minimun_rating}`);
+    filters += ` HAVING avg(property_reviews.rating) >= $${queryParams.length}`;
+  }
+
+  queryString += `${filters}`;
+  queryParams.push(limit);
+  queryString += `
+  GROUP BY properties.id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+  console.log(queryString, queryParams);
+
+  return pool.query(queryString, queryParams).then((res) => res.rows);
 };
 
 exports.getAllProperties = getAllProperties;
-
 
 /**
  * Add a property to the database

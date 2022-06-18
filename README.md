@@ -10,8 +10,8 @@ MY RESERVATIONS: Displayes user reservations
 !["LightBnB Entity Relation Diagram"](https://github.com/ZaSal1990/lighthousebnb/blob/main/LighthouseBnB_ERD.png)
 
 ## LightBnB Final Product
-!["My Reservation Page"](https://github.com/ZaSal1990/lighthousebnb/blob/main/My_Reservations.png)
-!["Create Listing Page"](https://github.com/ZaSal1990/lighthousebnb/blob/main/Create_Listing.png)
+!["My Reservation Page"](https://github.com/ZaSal1990/lighthousebnb/blob/main/assets/My_Reservations.png)
+!["Create Listing Page"](https://github.com/ZaSal1990/lighthousebnb/blob/main/assets/Create_Listing.png)
 
 
 ## Dependancies

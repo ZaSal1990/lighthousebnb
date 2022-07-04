@@ -81,40 +81,34 @@ const getAllProperties = function(options, limit = 10) {
   const queryParams = [];
 
   let queryString = `
-  SELECT properties.*, avg(property_reviews.rating) as average_rating
-  FROM properties
-  LEFT JOIN property_reviews ON properties.id = property_id
-  `;
+  SELECT properties.*, avg(property_reviews.rating) as average_rating FROM properties JOIN property_reviews ON properties.id = property_reviews.property_id `;
 
   let filters = '';
-
   if (options.city) {
     queryParams.push(`%${options.city}%`);
-    filters += ` WHERE city LIKE $${queryParams.length} `;
+    filters += `WHERE city LIKE $${queryParams.length} `;
   }
   if (options.owner_id) {
     queryParams.push(`${options.owner_id}`);
-    filters += ` ${filters === '' ? 'WHERE' : 'AND'} owner_id = $${queryParams.length}`;
+    filters += `${filters === '' ? 'WHERE' : 'AND'} owner_id = $${queryParams.length} `;
   }
   if (options.minimum_price_per_night && options.maximum_price_per_night) {
-    queryParams.push(`${options.minimum_price_per_night}`); //breaking query to utilize .length with .push properly, as mentor to get better solution, pushingh and accessing later two arguments is not working properly
-    filters += ` ${filters === '' ? 'WHERE' : 'AND'} cost_per_night BETWEEN $${queryParams.length}`;
-    queryParams.push(`${options.maximum_price_per_night}`);
-    filters += ` AND $${queryParams.length}`;
+    queryParams.push(`${options.minimum_price_per_night}`);
+    filters += `${filters === '' ? 'WHERE' : 'AND'} cost_per_night BETWEEN $${queryParams.length} `;
+    queryParams.push(`${options.maximum_price_per_night} `);
+    filters += `AND $${queryParams.length}`;
   }
-  if (options.minimun_rating) {
-    queryParams.push(`${options.minimun_rating}`);
-    filters += ` HAVING avg(property_reviews.rating) >= $${queryParams.length}`;
+  filters += ' GROUP BY properties.id';
+  if (options.minimum_rating) {
+    queryParams.push(`${options.minimum_rating}`);
+    filters += ` HAVING avg(property_reviews.rating) >= $${queryParams.length} `;
   }
-
+  //HAVING only comes after GROUP BY
   queryString += `${filters}`;
   queryParams.push(limit);
   queryString += `
-  GROUP BY properties.id
-  ORDER BY cost_per_night
-  LIMIT $${queryParams.length};
-  `;
-
+  ORDER BY cost_per_night 
+  LIMIT $${queryParams.length};`;
 
   return db.query(queryString, queryParams).then((res) => res.rows);
 };
@@ -127,6 +121,6 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  return pool.query('INSERT INTO properties(owner_id, title, description, thumbnail_photo_url, cover_photo_url, cost_per_night, street, city, province, post_code, country, parking_spaces, number_of_bathrooms, number_of_bedrooms) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *;',[property.owner_id, property.title, property.description, property.thumbnail_photo_url, property.cover_photo_url, property.cost_per_night, property.street, property.city, property.province, property.post_code, property.country, property.parking_spaces, property.number_of_bathrooms, property.number_of_bedrooms]).then(result => result.rows);
+  return db.query('INSERT INTO properties(owner_id, title, description, thumbnail_photo_url, cover_photo_url, cost_per_night, street, city, province, post_code, country, parking_spaces, number_of_bathrooms, number_of_bedrooms) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *;',[property.owner_id, property.title, property.description, property.thumbnail_photo_url, property.cover_photo_url, property.cost_per_night, property.street, property.city, property.province, property.post_code, property.country, property.parking_spaces, property.number_of_bathrooms, property.number_of_bedrooms]).then(result => console.log(result.rows));
 };
 exports.addProperty = addProperty;
